@@ -1,6 +1,7 @@
 import express from "express";
 import http from "http";
 import {matchesRouter} from "./routes/matches.js";
+import { commentaryRouter } from "./routes/commentary.js";
 import { attachWebsocketServer } from "./ws/server.js";
 import { securityMiddleware } from "./arcjet.js";
 const app = express();
@@ -15,9 +16,13 @@ app.get("/", (_request, response) => {
 });
 app.use(securityMiddleware());
 app.use("/matches", matchesRouter);
-const  {broadcastMatchCreated} = attachWebsocketServer(server);
+app.use("/matches/:id/commentary", commentaryRouter);
+app.use("/commentary", commentaryRouter);
+
+const  {broadcastMatchCreated ,broadcastCommentary} = attachWebsocketServer(server);
 //app.locals presents in every request
 app.locals.broadcastMatchCreated = broadcastMatchCreated;
+app.locals.broadcastCommentary = broadcastCommentary;
 server.listen(PORT, HOST, () => {
   const baseUrl = HOST ==="0.0.0.0" ? `http://localhost:${PORT}` :     `http://${HOST}:${PORT}`;
   console.log(`Server is running at ${baseUrl}`);
