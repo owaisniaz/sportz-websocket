@@ -2,6 +2,7 @@ import express from "express";
 import http from "http";
 import {matchesRouter} from "./routes/matches.js";
 import { attachWebsocketServer } from "./ws/server.js";
+import { securityMiddleware } from "./arcjet.js";
 const app = express();
 const PORT = process.env.PORT || 8000;
 const HOST = process.env.HOST || "0.0.0.0";
@@ -12,6 +13,7 @@ app.use(express.json());
 app.get("/", (_request, response) => {
   response.send("Welcome to the server!");
 });
+app.use(securityMiddleware());
 app.use("/matches", matchesRouter);
 const  {broadcastMatchCreated} = attachWebsocketServer(server);
 //app.locals presents in every request

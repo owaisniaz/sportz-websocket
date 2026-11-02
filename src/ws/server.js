@@ -50,7 +50,23 @@ export function attachWebsocketServer(server) {
 
     wss.on("close", () => clearInterval(heartbeat));
     //Cleanup the traffic from http server to websocket server
-    wss.on("connection", (socket) => {
+    wss.on("connection", async (socket,req) => {
+        if(wsArcjet) {
+            try{
+                const decision = await wsArcjet.protect(req);
+                if(decision.isDenied()) {
+                    const code = decision.reason.isRateLimit() ? 1013 : 1008; // 1013 for rate limit, 1008 for other reasons
+                    const reason = decision.reason.isRateLimit() ? "Rate limit exceeded" : "Access denied by Arcjet";
+                   socket.close(code, reason);
+                    return;
+                }
+            }
+            catch(err){
+                console.error("WS connection server error: ", err);
+                socket.close(1011, "Server Security Error");
+                return;
+            }
+        }
         socket.isAlive = true;
         socket.on("pong", () => { socket.isAlive = true; });
         socket.on("error", console.error);
